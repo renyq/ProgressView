@@ -13,7 +13,6 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.Toast;
 
 import com.renyq.progressView.R;
 
@@ -53,6 +52,7 @@ public class ProgressView extends View {
     private float y;
     RectF rect;
     private boolean isTextNotEmpty;
+    private Paint.FontMetrics fontMetrics;
 
     public ProgressView(Context context) {
         super(context);
@@ -122,19 +122,9 @@ public class ProgressView extends View {
         mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
         mTextPaint.setTextAlign(Paint.Align.LEFT);
 
+        //字体绘制的位置控制
+        fontMetrics = mTextPaint.getFontMetrics();
         if (progress != 0) {
-            if (progress > 0 && progress < 1) {
-                progress = progress * 100;
-                text = progress + "%";
-            } else if (progress > 100 || progress < 0) {
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    Toast.makeText(mContext, "invalid progress", Toast.LENGTH_SHORT).show();
-                }
-            } else if (progress >= 1 && progress <= 100) {
-                text = progress + "%";
-            }
             startAnim();
         }
         isTextNotEmpty = !TextUtils.isEmpty(text);
@@ -157,13 +147,7 @@ public class ProgressView extends View {
         //宽高中较小的一边
         smaller = centreWidth > centreHeight ? centreHeight * 2 : centreWidth * 2;
 
-        if (isTextNotEmpty) {
-            //字体绘制的位置控制
-            Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-            //字体宽度
-            textWidth = mTextPaint.measureText(text);
-            y = centreHeight + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent;
-        }
+
 
         switch (progressShape) {
             case PROGRESS_RECTANGLE:
@@ -253,11 +237,17 @@ public class ProgressView extends View {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 mFloatPos = (float) animation.getAnimatedValue();
+                text = (int) (mFloatPos * 100) + "%";
+                if (isTextNotEmpty) {
+                    //字体宽度
+                    textWidth = mTextPaint.measureText(text);
+                    y = centreHeight + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent;
+                }
                 // 不断刷新，重新调用onDraw方法
                 invalidate();
             }
         });
-        valueAnimator.setDuration(3000);
+        valueAnimator.setDuration(750);
         valueAnimator.start();
     }
 
